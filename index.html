@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <style>
+      body {
+        margin: 0;
+        font-family: Arial, sans-serif;
+        background-image: url("./fotor-ai-20230508134510.jpg");
+        background-size: cover;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        min-height: 100vh;
+      }
+      .window {
+        width: 80%;
+        max-width: 800px;
+        padding: 1rem;
+        text-align: center;
+        background-color: rgba(255, 255, 255, 0.8);
+        border-radius: 8px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      }
+
+      #explication-popup {
+        display: none;
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        width: 80%;
+        max-width: 45rem;
+        padding: 1rem;
+        text-align: center;
+        background: linear-gradient(to bottom right, #0066ff, #c892fe);
+        border-radius: 8px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      }
+    </style>
+    <title>HTML to SwiftUI Converter</title>
+  </head>
+  <body>
+    <div class="window">
+      <h1>HTML to SwiftUI Converter</h1>
+      <form id="converter-form">
+        <label for="html-input">Enter your HTML code:</label>
+        <br />
+        <textarea id="html-input" rows="10" cols="50"></textarea>
+        <br />
+        <button type="submit">Generate SwiftUI Code</button>
+      </form>
+      <h2>SwiftUI Code:</h2>
+      <textarea id="swiftui-output" rows="10" cols="50" readonly></textarea>
+      <button id="help-button">Aide</button>
+    </div>
+
+    <div id="explication-popup" class="explication">
+      <p>
+        Cette page est un outil qui permet de convertir du code HTML en code SwiftUI. Cela peut être utile si vous travaillez sur une application SwiftUI et que vous avez déjà du contenu HTML que vous souhaitez inclure dans votre application. <br />
+
+        Voici comment utiliser l'outil : <br />
+
+        Copiez le code HTML que vous souhaitez convertir. <br />
+        Collez-le dans la zone de texte intitulée "Enter your HTML code". <br />
+        Cliquez sur le bouton "Generate SwiftUI Code". <br />
+        Le code SwiftUI généré s'affichera dans la zone de texte intitulée "SwiftUI Code". <br />
+        Il convient de noter que toutes les balises HTML ne sont pas convertibles en code SwiftUI. L'outil prend en charge les balises HTML suivantes : <br />
+
+        h1 à h6 : ces balises HTML sont converties en Text avec différentes tailles de police. <br />
+        p : cette balise HTML est convertie en Text. <br />
+        img : cette balise HTML est convertie en Image. <br />
+        div, form et span : ces balises HTML sont converties en VStack. <br />
+        Il est possible que certaines balises HTML ne soient pas converties correctement ou qu'il y ait des erreurs dans le code généré. Il est donc important de vérifier le code SwiftUI généré et de l'adapter en fonction de vos besoins.
+      </p>
+    </div>
+
+    <script>
+      document.getElementById("converter-form").addEventListener("submit", function (event) {
+        event.preventDefault();
+        const htmlInput = document.getElementById("html-input").value;
+        const swiftuiOutput = document.getElementById("swiftui-output");
+        swiftuiOutput.value = convertHTMLToSwiftUI(htmlInput);
+      });
+
+      function convertHTMLToSwiftUI(htmlString) {
+        const parser = new DOMParser();
+        const htmlDocument = parser.parseFromString(htmlString, "text/html");
+        const htmlBody = htmlDocument.body;
+
+        return parseNode(htmlBody);
+      }
+
+      function parseNode(node) {
+        let swiftuiCode = "";
+
+        for (const childNode of node.childNodes) {
+          if (childNode.nodeType === Node.TEXT_NODE) {
+            swiftuiCode += childNode.textContent.trim();
+          } else if (childNode.nodeType === Node.ELEMENT_NODE) {
+            swiftuiCode += parseElement(childNode);
+          }
+        }
+
+        return swiftuiCode;
+      }
+
+      function parseElement(element) {
+        const tagName = element.tagName.toLowerCase();
+        let swiftuiCode = "";
+
+        switch (tagName) {
+          case "h1":
+            swiftuiCode += `Text("${element.textContent}")\n  .font(.largeTitle)\n`;
+            break;
+          case "h2":
+            swiftuiCode += `Text("${element.textContent}")\n  .font(.title)\n`;
+            break;
+          case "h3":
+            swiftuiCode += `Text("${element.textContent}")\n  .font(.headline)\n`;
+            break;
+          case "h4":
+            swiftuiCode += `Text("${element.textContent}")\n  .font(.subheadline)\n`;
+            break;
+          case "h5":
+            swiftuiCode += `Text("${element.textContent}")\n  .font(.callout)\n`;
+            break;
+          case "h6":
+            swiftuiCode += `Text("${element.textContent}")\n  .font(.caption)\n`;
+            break;
+          case "p":
+            swiftuiCode += `Text("${element.textContent}")\n`;
+            break;
+          case "img":
+            const src = element.getAttribute("src");
+            const alt = element.getAttribute("alt") || "";
+            swiftuiCode += `Image("${src}")\n  .resizable()\n  .aspectRatio(contentMode: .fit)\n  .accessibilityLabel("${alt}")\n`;
+            break;
+          case "div":
+          case "form":
+          case "span":
+            swiftuiCode += `VStack {\n${parseNode(element)}\n}\n`;
+            break;
+          default:
+            swiftuiCode += parseNode(element);
+            break;
+        }
+        return swiftuiCode;
+      }
+
+      const helpButton = document.getElementById("help-button");
+      const explicationPopup = document.getElementById("explication-popup");
+
+      helpButton.addEventListener("click", function () {
+        if (explicationPopup.style.display === "block") {
+          explicationPopup.style.display = "none";
+        } else {
+          explicationPopup.style.display = "block";
+        }
+      });
+    </script>
+  </body>
+</html>
